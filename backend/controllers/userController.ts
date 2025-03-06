@@ -83,6 +83,23 @@ const registerUser: RequestHandler = async (req: Request, res: Response): Promis
 };
 
 //Route for Admin Login
-const adminLogin: RequestHandler = async (req: Request, res: Response) => {};
+const adminLogin: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+      if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET is not defined");
+      }
+      const token = jwt.sign(email + password, process.env.JWT_SECRET);
+      res.json({ success: true, token });
+    } else {
+      res.json({ success: false, message: "Invalid credentials" });
+    }
+  } catch (error) {
+    console.log(error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    res.status(500).json({ success: false, message: errorMessage });
+  }
+};
 
 export { loginUser, registerUser, adminLogin };
