@@ -1,6 +1,5 @@
 import { Request, RequestHandler, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
-import { log } from "node:console";
 import productModel from "../models/productModel";
 
 interface MulterFile {
