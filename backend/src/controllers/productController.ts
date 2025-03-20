@@ -10,6 +10,12 @@ interface MulterFile {
 export const addProduct: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { name, description, price, category, subCategory, sizes, bestseller } = req.body;
+    //console.log(bestseller);
+
+    if (!name || !description || !price || !category || !subCategory || !sizes) {
+      res.status(400).json({ success: false, message: "All fields are required!" });
+      return;
+    }
 
     const files = req.files as MulterFile;
 
@@ -40,8 +46,10 @@ export const addProduct: RequestHandler = async (req: Request, res: Response) =>
     };
 
     const product = new productModel(productData);
+    //console.log(product);
 
     await product.save();
+    //console.log(product);
 
     res.json({ success: true, message: "Product Added" });
   } catch (error) {
@@ -53,6 +61,11 @@ export const addProduct: RequestHandler = async (req: Request, res: Response) =>
 //Removing Product
 export const removeProduct: RequestHandler = async (req: Request, res: Response) => {
   try {
+    const product = await productModel.findById(req.body.id);
+    if (!product) {
+      res.status(404).json({ success: false, message: "Product not found!" });
+      return;
+    }
     await productModel.findByIdAndDelete(req.body.id);
     res.json({ success: true, message: "Product Deleted" });
   } catch (error) {
@@ -64,6 +77,7 @@ export const removeProduct: RequestHandler = async (req: Request, res: Response)
 //List of Product
 export const listProduct: RequestHandler = async (req: Request, res: Response) => {
   try {
+    //console.log("API HIT SUCCESS");
     const products = await productModel.find({});
     res.json({ success: true, products });
   } catch (error) {
@@ -76,9 +90,19 @@ export const listProduct: RequestHandler = async (req: Request, res: Response) =
 export const singleProduct: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { productId } = req.body;
+    if (!productId) {
+      res.status(400).json({ success: false, message: "Product ID is required!" });
+      return;
+    }
     //console.log(productId);
     const product = await productModel.findById(productId);
     //console.log(product);
+
+    if (!product) {
+      res.status(404).json({ success: false, message: "Product not found!" });
+      return;
+    }
+
     res.json({ success: true, product });
   } catch (error) {
     console.log(error);

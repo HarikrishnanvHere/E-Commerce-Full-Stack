@@ -8,10 +8,15 @@ import productRouter from "./routes/productRoute.ts";
 
 //App Config
 
-const app: Application = express();
+export const app: Application = express();
 const port = process.env.PORT || 4000;
-connectDB();
-connectCloudinary();
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+  connectCloudinary();
+  app.listen(port, () => {
+    console.log("Server started on PORT : " + port);
+  });
+}
 
 //middlewares
 
@@ -24,8 +29,4 @@ app.use("/api/product", productRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("API WORKING");
-});
-
-app.listen(port, () => {
-  console.log("Server started on PORT : " + port);
 });

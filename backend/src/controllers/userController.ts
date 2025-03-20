@@ -86,6 +86,7 @@ const registerUser: RequestHandler = async (req: Request, res: Response): Promis
 const adminLogin: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    //console.log("LOGIN API HIT SUCCESS");
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
       if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET is not defined");

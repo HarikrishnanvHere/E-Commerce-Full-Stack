@@ -9,7 +9,7 @@ const adminAuth: RequestHandler = async (req: Request, res: Response, next: Next
       return;
     }
     if (!process.env.JWT_SECRET) {
-      res.json({ success: false, message: "Sectre not found" });
+      res.json({ success: false, message: "Secret not found" });
       return;
     }
     const decodedData = jwt.verify(token as string, process.env.JWT_SECRET);
