@@ -3,34 +3,166 @@ import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/Shop-Context";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const PlaceOrder: React.FC = () => {
   const [method, setMethod] = useState("cod");
+  const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products } = useContext(ShopContext);
 
-  const { navigate } = useContext(ShopContext);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    street: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "",
+    phone: "",
+  });
+
+  const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+    const value = e.target.value;
+
+    setFormData((data) => ({ ...data, [name]: value }));
+  };
+
+  const initPay = (order: any, user: any) => {
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!window.Razorpay) {
+      console.error("Razorpay SDK not loaded!");
+      return;
+    }
+    console.log(keyId);
+    const options = {
+      key: keyId,
+      amount: order.amount * 100,
+      currency: order.currency || "USD",
+      name: "Order Payment",
+      description: "Order Payment",
+      order_id: order.id,
+      receipt: order.receipt,
+      handler: async (response: any) => {
+        console.log(response);
+        try {
+          const { data } = await axios.post(backendUrl + "/api/order/verifyRazorpay", response, { headers: { token } });
+          if (data.success) {
+            toast.success("Payment Successful! Order Placed");
+            navigate("/orders");
+            setCartItems({});
+          }
+        } catch (error) {
+          console.log(error);
+          toast.error("Payment Failed! Please try again later");
+        }
+      },
+      prefill: {
+        name: user.name,
+        email: user.email,
+        contact: "999999999",
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  };
+
+  const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // console.log("Done")
+    try {
+      let orderItems = [];
+      for (const items in cartItems) {
+        for (const item in cartItems[items]) {
+          if (cartItems[items][item] > 0) {
+            const itemInfo = structuredClone(products.find((product) => product._id === items)) as any;
+            if (itemInfo) {
+              itemInfo.size = item;
+              itemInfo.quantity = cartItems[items][item];
+              orderItems.push(itemInfo);
+            }
+          }
+        }
+      }
+      // console.log(orderItems);
+
+      let orderData = {
+        address: formData,
+        items: orderItems,
+        amount: getCartAmount() + delivery_fee,
+      };
+
+      switch (method) {
+        //API Calls for Cash On Delivery Orders
+        case "cod":
+          const response = await axios.post(backendUrl + "/api/order/place", orderData, { headers: { token } });
+          if (response.data.success) {
+            setCartItems({});
+            navigate("/orders");
+          } else {
+            toast.error(response.data.message);
+          }
+          break;
+
+        case "stripe":
+          const responseStripe = await axios.post(backendUrl + "/api/order/stripe", orderData, { headers: { token } });
+          if (responseStripe.data.success) {
+            const { session_url } = responseStripe.data;
+            window.location.replace(session_url);
+          } else {
+            toast.error(responseStripe.data.message);
+          }
+          break;
+
+        case "razorpay":
+          const responseRazorpay = await axios.post(backendUrl + "/api/order/razorpay", orderData, { headers: { token } });
+          if (responseRazorpay.data.success) {
+            console.log(responseRazorpay.data.order);
+            initPay(responseRazorpay.data.order, responseRazorpay.data.user);
+          }
+          break;
+
+        default:
+          break;
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to Place Order");
+    }
+  };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
+    <form onSubmit={onSubmitHandler} className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
       {/**--------------- Left Side ---------------*/}
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
         <div className="text-xl sm:text-2xl my-3">
           <Title text1={"DELIVERY"} text2={"INFORMATION"} />
         </div>
         <div className="flex gap-3">
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="First name" type="text" />
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Last name" type="text" />
+          <input required onChange={onChangeHandler} name="firstName" value={formData.firstName} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="First name" type="text" />
+          <input required onChange={onChangeHandler} name="lastName" value={formData.lastName} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Last name" type="text" />
         </div>
-        <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="E-mail Address" type="email" />
-        <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full " placeholder="Street" type="text" />
+        <input required onChange={onChangeHandler} name="email" value={formData.email} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="E-mail Address" type="email" />
+        <input required onChange={onChangeHandler} name="street" value={formData.street} className="border border-gray-300 rounded py-1.5 px-3.5 w-full " placeholder="Street" type="text" />
         <div className="flex gap-3">
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="City" type="text" />
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="State" type="text" />
+          <input required onChange={onChangeHandler} name="city" value={formData.city} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="City" type="text" />
+          <input required onChange={onChangeHandler} name="state" value={formData.state} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="State" type="text" />
         </div>
         <div className="flex gap-3">
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Pincode" type="number" />
-          <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Country" type="text" />
+          <input required onChange={onChangeHandler} name="pincode" value={formData.pincode} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Pincode" type="number" />
+          <input required onChange={onChangeHandler} name="country" value={formData.country} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Country" type="text" />
         </div>
-        <input className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Phone" type="number" />
+        <input required onChange={onChangeHandler} name="phone" value={formData.phone} className="border border-gray-300 rounded py-1.5 px-3.5 w-full" placeholder="Phone" type="number" />
       </div>
 
       {/**----------------------- Right Side ------------------------ */}
@@ -59,13 +191,13 @@ const PlaceOrder: React.FC = () => {
           </div>
 
           <div className="w-full text-end mt-8">
-            <button onClick={() => navigate("/orders")} className="bg-black text-white px-16 py-3 text:sm">
+            <button type="submit" className="bg-black text-white px-16 py-3 text:sm">
               Place Order
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 
