@@ -33,6 +33,8 @@ export const placeOrder = async (req: Request, res: Response) => {
       payment: false,
       date: Date.now(),
     };
+  
+    //console.log(orderData);
 
     const newOrder = new OrderModel(orderData);
     await newOrder.save();

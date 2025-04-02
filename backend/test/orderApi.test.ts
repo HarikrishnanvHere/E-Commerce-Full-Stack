@@ -45,6 +45,21 @@ describe("Order API test suite", () => {
     await orderModel.deleteMany({});
   });
 
+  test("Should not place an order without authentication", async () => {
+    const orderData = {
+      userId,
+      items: [{ name: "Product1", price: 100, quantity: 2 }],
+      amount: 200,
+      address: { street: "123 Main St", city: "New York" },
+    };
+  
+    const res = await request(app).post("/api/order/place").send(orderData);
+  
+    //expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Not Authorized, Login Again!");
+  });
+
   // PLACE ORDER (COD)
   test("Should place an order with COD", async () => {
     const orderData = {
@@ -63,6 +78,18 @@ describe("Order API test suite", () => {
     const savedOrder = await orderModel.findOne({});
     expect(savedOrder).toBeDefined();
     orderId = savedOrder?._id.toString()!;
+  });
+
+
+  test("Should not place an order with missing fields", async () => {
+    const orderData = {
+      userId, // Missing items, amount, and address
+    };
+  
+    const res = await request(app).post("/api/order/place").set("token", authToken).send(orderData);
+    
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Order Failed");
   });
 
   // FETCH USER ORDERS
@@ -125,10 +152,17 @@ describe("Order API test suite", () => {
     expect(updatedOrder?.status).toBe("Shipped");
   });
 
+
+
+
   // PAYMENT VERIFICATION (SIMULATION)
 
   // Mock Stripe verification
   test("Should verify Stripe payment", async () => {
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+
     const order = await orderModel.create({
       userId,
       items: [{ name: "Product1", price: 100, quantity: 2 }],
@@ -149,6 +183,7 @@ describe("Order API test suite", () => {
     expect(updatedOrder?.payment).toBe(true);
   });
 
+
   // Mock Razorpay verification
   test("Should verify Razorpay payment", async () => {
     const order = await orderModel.create({
@@ -166,5 +201,16 @@ describe("Order API test suite", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe("Verification using Razorpay Failed!"); // Simulating failure case
+  });
+
+  test("Should fail to verify Razorpay payment if order is not paid", async () => {
+    const res = await request(app).post("/api/order/verifyRazorpay").set("token", authToken).send({
+      userId,
+      razorpay_order_id: "invalid_id",
+    });
+  
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Verification using Razorpay Failed!");
   });
 });

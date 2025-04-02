@@ -14,7 +14,8 @@ const Login: React.FC<LoginProps> = ({ setToken }) => {
   const onSubmitHandler = async (e: FormEvent) => {
     try {
       e.preventDefault();
-      //console.log(backendUrl);
+      console.log(backendUrl);
+      console.log(email, password);
       const response = await axios.post(backendUrl + "/api/user/admin", { email, password });
       //console.log(response);
       if (response.data.success) {

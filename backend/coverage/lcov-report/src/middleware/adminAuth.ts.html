@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">57.89% </span>
+                <span class="strong">68.42% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>11/19</span>
+                <span class='fraction'>13/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">14.28% </span>
+                <span class="strong">28.57% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/7</span>
+                <span class='fraction'>2/7</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">55.55% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/18</span>
+                <span class='fraction'>12/18</span>
             </div>
         
             
@@ -91,24 +91,24 @@
 <a name='L26'></a><a href='#L26'>26</a>
 <a name='L27'></a><a href='#L27'>27</a>
 <a name='L28'></a><a href='#L28'>28</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -116,16 +116,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextFunction, Request, RequestHandler, Response } from "express";
 import jwt from "jsonwebtoken";
 &nbsp;
 const adminAuth: RequestHandler = async (req: Request, res: Response, next: NextFunction) =&gt; {
   try {
     const token = Array.isArray(req.headers.token) ? <span class="branch-0 cbranch-no" title="branch not covered" >req.headers.token[0] </span>: req.headers.token;
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!token) {
-<span class="cstat-no" title="statement not covered" >      res.json({ success: false, message: "Not Authorized!" });</span>
-<span class="cstat-no" title="statement not covered" >      return;</span>
+    if (!token) {
+      res.json({ success: false, message: "Not Authorized!" });
+      return;
     }
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!process.env.JWT_SECRET) {
 <span class="cstat-no" title="statement not covered" >      res.json({ success: false, message: "Secret not found" });</span>
@@ -133,7 +133,7 @@ const adminAuth: RequestHandler = async (req: Request, res: Response, next: Next
     }
     const decodedData = jwt.verify(token as string, process.env.JWT_SECRET);
     <span class="missing-if-branch" title="if path not taken" >I</span>if (decodedData !== process.env.ADMIN_EMAIL! + process.env.ADMIN_PASSWORD!) {
-<span class="cstat-no" title="statement not covered" >      res.json({ success: true, message: "Not Authorized. Login Again!" });</span>
+<span class="cstat-no" title="statement not covered" >      res.json({ success: false, message: "Not Authorized. Login Again!" });</span>
     }
     next();
   } catch (error) {
@@ -151,7 +151,7 @@ export default adminAuth;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-03-25T08:10:08.653Z
+                at 2025-04-02T05:39:15.652Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

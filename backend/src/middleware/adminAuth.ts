@@ -14,7 +14,7 @@ const adminAuth: RequestHandler = async (req: Request, res: Response, next: Next
     }
     const decodedData = jwt.verify(token as string, process.env.JWT_SECRET);
     if (decodedData !== process.env.ADMIN_EMAIL! + process.env.ADMIN_PASSWORD!) {
-      res.json({ success: true, message: "Not Authorized. Login Again!" });
+      res.json({ success: false, message: "Not Authorized. Login Again!" });
     }
     next();
   } catch (error) {
