@@ -19,7 +19,7 @@ const Orders: React.FC<OrdersProps> = ({ token }) => {
       const response = await axios.post(backendUrl + "/api/order/list", {}, { headers: { token } });
       if (response.data.success) {
         setOrders(response.data.orders.reverse());
-        console.log(response.data.orders);
+        //console.log(response.data.orders);
       } else {
         toast.error(response.data.message);
       }
